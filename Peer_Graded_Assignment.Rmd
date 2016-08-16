@@ -1,0 +1,106 @@
+---
+title: "Regression Model Peer Graded Assignment"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Executive Summary
+Motor Trend, a magazine about the automobile industry, they are interested in exploring the relationship between a set of variables and miles per gallon (MPG) (outcome). They are particularly interested in the following two questions:
+
+* "Is an automatic or manual transmission better for MPG"
+* "Quantify the MPG difference between automatic and manual transmissions"
+
+## Reading and analysing car data
+```{r }
+library(datasets)
+data(mtcars)
+str(mtcars)
+```
+The variable we are interested is ,am, of numeric class into a factor class and also we can level it into Automatic and Manual for better exploratory analysis and making better model.
+
+```{r}
+mtcars$am <- as.factor(mtcars$am)
+levels(mtcars$am) <- c("Automatic", "Manual")
+```
+
+## Exploraoty Data Analysis
+```{r, echo=FALSE}
+library(ggplot2)
+```
+For properly fitting the linear model we have to find out all the predictor variables for determining the outcome, now we donot want to omit any predictor variable in our model neither do we want to add any correlated variable.
+
+A box plot is created to see the variation of Transmission on MPG and it seems that manual transmission has better mpg than automatic transmission. 
+```{r,fig.width=5,fig.height=3,fig.align='center'}
+boxplot(mpg~am, data = mtcars,
+        col = c("blue", "red"),xlab = "Transmission Type",ylab = "MPG",
+        main = "MPG by Transmission Type")
+```
+
+Their might be serveral other variables that must be causing the increament of MPG with manual tansmission one of it can be weight.
+
+We have plotted a variation of MPG with respect to weight for different transmission types.
+```{r, fig.width=5,fig.height=3,fig.align='center'}
+ggplot(data=mtcars,aes(x=wt,y=mpg, color=am))+facet_wrap(~am)+xlab("Weight")+
+  ylab("MPG")+ggtitle("MPG VS Weight by Transmission type")+
+  geom_point(size=2,colour="black")+geom_point(size=1)
+```
+So, we can clearly see that wight has indirect relationship with MPG and manual trasmisison has less wieght than automatic trasmission, so might be because of this Mpg was showing better fuel efficiency with manual transmisison as compared to Automatic transmission.
+
+##Correlation test
+It is used to indentify whether other variable that have any dependency on MPG or not.
+```{r}
+data("mtcars")
+sort(cor(mtcars)[1,])
+```
+
+From the correlation data, we could see cyl, hp, wt and carb are negatively correlated with mpg. In addition to am (which by default must be included in our regression model), we see that wt, cyl, disp, and hp are highly correlated with our dependent variable mpg.
+
+## Modeling
+###Simple linear model
+
+```{r}
+fit <- lm(mpg~am, data = mtcars)
+summary(fit)
+```
+We do not gain much more information from our hypothesis test using this model. Interpreting the coefficient and intercepts, we say that, on average, manual transmission cars have 7.245 MPGs more than automatic transmission. In addition, we see that the R^2 value is 0.3598. This means that our model only explains 35.98% of the variance.
+
+We need to understand the impact of transmission in conjunction with other factors to quantify the mpg difference between automatic and manual transmission.
+
+###Multivariate Modeling
+For multivariate we have choose the predicatable variable that are least correlated to each other.
+
+```{r}
+bestfit<-lm(mpg~factor(am)+qsec+wt, data=mtcars)
+summary(bestfit)
+```
+This shows that in adddition to transmission, weight of the vehicle as well as accelaration speed have the highest relation to explaining the variation in mpg. The adjusted R^2 is 84% which means that the model explains 84% of the variation in mpg indicating it is a robust and highly predictive model.
+
+##Conclusion
+
+* Manual transmission has higher MPG i.e. higher fuel efficiency as compared to 
+automatic transmisison.We say that, on average, manual transmission cars have 2.94 MPGs more than automatic transmission cars.
+* MPG has indirect relationship with weight, as weight increases per 1000lb (0.5 tons), the mpg will decrease by 2.5.
+
+So, the above analysis answers the question of auto or manual transmission but we have to keep in mind other factors too, as it is not a direct factor. So, you can't answer it.
+
+##Appendix
+###Variable testing
+```{r,echo=FALSE}
+mtcars$am <- as.factor(mtcars$am)
+levels(mtcars$am) <- c("Automatic", "Manual")
+```
+
+```{r, fig.height=3,fig.align='center'}
+ggplot(data=mtcars,aes(x=hp, y=mpg, col=am))+facet_wrap(~am)+
+  xlab("Horsepower")+ylab("Miles per gallon")+ ggtitle("MpG vs. HP /Gearing")+
+    geom_point(size=2,colour="black")+geom_point(size=2)
+```
+
+### Residual plot for best fit model
+```{r, fig.height=4,fig.align='center'}
+par(mfrow = c(2,2))
+plot(bestfit)
+```
